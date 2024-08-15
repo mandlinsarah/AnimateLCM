@@ -21,14 +21,15 @@ class Transformer3DModelOutput(BaseOutput):
 if is_xformers_available():
     import xformers
     import xformers.ops
+    XFORMERS_AVAILABLE = True
 else:
     xformers = None
+    XFORMERS_AVAILABLE = False
 
 
 class Transformer3DModel(ModelMixin, ConfigMixin):
     @register_to_config
-    def __init__(
-        self,
+    def __init__(self,
         num_attention_heads: int = 16,
         attention_head_dim: int = 88,
         in_channels: Optional[int] = None,
@@ -223,7 +224,7 @@ class BasicTransformerBlock(nn.Module):
             self.norm_temp = AdaLayerNorm(dim, num_embeds_ada_norm) if self.use_ada_layer_norm else nn.LayerNorm(dim)
 
     def set_use_memory_efficient_attention_xformers(self, use_memory_efficient_attention_xformers: bool):
-        if not is_xformers_available():
+        if not XFORMERS_AVAILABLE:
             raise ModuleNotFoundError(
                 "Refer to https://github.com/facebookresearch/xformers for more information on how to install"
                 " xformers",
@@ -294,3 +295,5 @@ class BasicTransformerBlock(nn.Module):
             hidden_states = rearrange(hidden_states, "(b d) f c -> (b f) d c", d=d)
 
         return hidden_states
+
+
